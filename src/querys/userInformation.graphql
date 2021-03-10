@@ -1,0 +1,60 @@
+query userInfo($nameUser:String!){
+    rateLimit {
+          cost
+          remaining
+          resetAt
+    }
+    user(login:$nameUser) {
+          id
+          avatarUrl
+          bio
+          url
+          websiteUrl
+          gistComments {
+              totalCount
+          }
+          watching {
+              totalCount
+          }
+          followers {
+              totalCount
+          }
+          following {
+              totalCount
+          }
+          location
+              email
+          name
+          createdAt
+          location
+          company
+          issues {
+              totalCount
+          }
+          organizations(first: 100) {
+              totalCount
+              pageInfo {
+                  endCursor
+                  hasNextPage
+              }
+              nodes {
+                  name
+              }
+          }
+          projects {
+              totalCount
+          }
+          gists {
+              totalCount
+          }
+          pullRequests {
+              totalCount
+          }
+          commitComments {
+              totalCount
+          }
+          issueComments {
+              totalCount
+          }
+    }
+ }
