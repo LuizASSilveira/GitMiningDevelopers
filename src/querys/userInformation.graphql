@@ -1,15 +1,18 @@
 query userInfo($nameUser:String!){
-    rateLimit {
-          cost
-          remaining
-          resetAt
-    }
     user(login:$nameUser) {
           id
           avatarUrl
           bio
+          login
           url
           websiteUrl
+          location
+          email
+          name
+          createdAt
+          location
+          company
+
           gistComments {
               totalCount
           }
@@ -22,12 +25,9 @@ query userInfo($nameUser:String!){
           following {
               totalCount
           }
-          location
-              email
-          name
-          createdAt
-          location
-          company
+          repositories{
+            totalCount
+          }
           issues {
               totalCount
           }
@@ -46,6 +46,9 @@ query userInfo($nameUser:String!){
           }
           gists {
               totalCount
+          }
+          gistComments{
+            totalCount
           }
           pullRequests {
               totalCount
