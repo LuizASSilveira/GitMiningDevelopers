@@ -5,7 +5,8 @@ import pandas as pd
 
 
 def getContributors(size=50):
-    resp = performRequest('https://api.github.com/repos/rails/rails/contributors?per_page={}&order=desc'.format(size)).json()
+    resp = performRequest(
+        'https://api.github.com/repos/rails/rails/contributors?per_page={}&order=desc'.format(size)).json()
     return [urlUser['login'] for urlUser in resp][:size]
 
 
@@ -23,6 +24,31 @@ def getUserInfo(usuerName):
 
 
 def getUserInfByYear(loginUser, dateCreated):
+    dateCreated = dateCreated.split("-")
+    yearCreated = int(dateCreated[0])
+
+    todayDate = str(date.today()).split('-')
+    todayYear = int(todayDate[0])
+    userYearInfo = {}
+
+    while yearCreated <= todayYear:
+
+        yearCreated = yearCreated
+        queryVariables = {
+            "nameUser": loginUser,
+            "fromDate": '{}-01-01T04:00:00Z'.format(yearCreated),
+            "toDate": '{}-12-31T23:59:59Z'.format(yearCreated),
+        }
+        query = getQueryFile('userInfoContributionsCollection')
+        userYearInfo[yearCreated] = requestApiGitHubV4(query, queryVariables)['data']['user']["contributionsCollection"]
+        print('{}: {}'.format(yearCreated, list(userYearInfo[yearCreated].values())))
+        keys = userYearInfo[yearCreated].keys()
+        yearCreated += 1
+
+    return userYearInfo, keys
+
+
+def getUserInfByMonth(loginUser, dateCreated):
     dateCreated = dateCreated.split("-")
     yearCreated = int(dateCreated[0])
     monthCreated = int(dateCreated[1])
@@ -67,7 +93,6 @@ def getUserInfByYear(loginUser, dateCreated):
         #     break
     return userYearInfo, keys
 
-
 def repositoryUser(loginUser, numPage=80):
     queryVariables = {
         "nameUser": loginUser,
@@ -94,8 +119,8 @@ def repositoryUser(loginUser, numPage=80):
 
 def getUserRepositoryCommit(userID, arrayRepository, numPage=100):
     arrayCommits = []
-    for repository in arrayRepository:
-        print(repository['nameWithOwner'])
+    for index, repository in enumerate(arrayRepository):
+        print(index, '-> ', repository['nameWithOwner'])
         owner, name = repository['nameWithOwner'].split('/')
         if name == "linux":
             'Ignorou repositorio linux por nao retornar o historico via api'
@@ -112,7 +137,8 @@ def getUserRepositoryCommit(userID, arrayRepository, numPage=100):
         while True:
             resp = requestApiGitHubV4(query, queryVariables)
             # print(resp)
-            if not resp['data']['repository']['defaultBranchRef']:
+            if not resp['data']['repository']['defaultBranchRef'] or \
+                    resp['data']['repository']['defaultBranchRef']['target']['history']['totalCount'] == 0:
                 break
 
             resp = resp['data']['repository']['defaultBranchRef']['target']['history']

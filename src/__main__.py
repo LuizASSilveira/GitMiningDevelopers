@@ -94,18 +94,25 @@ def main(standardDirectory, listDev):
         print('getUserRepositoryCommit')
         print('---------------')
         userId = userInfo['data']['user']['id']
-        userCommits = getUserRepositoryCommit(userId, repositories['owner']+repositories['collaborator'])
+        userCommits = getUserRepositoryCommit(userId, repositories['owner'] + repositories['collaborator'])
+        # userCommits = getUserRepositoryCommit(userId, repositories['collaborator'])
         userCommitInfo = {
             'changedFiles': 0,
             'additions': 0,
             'deletions': 0
         }
-        for commit in userCommits:
-            userCommitInfo['changedFiles'] += commit['changedFiles']
-            userCommitInfo['additions'] += commit['additions']
-            userCommitInfo['deletions'] += commit['deletions']
+        errorNoneGit = {}
+        for index, commit in enumerate(userCommits):
+            if not commit:
+                errorNoneGit[index] = commit
+                continue
+
+            userCommitInfo['changedFiles'] += commit['changedFiles'] if commit['changedFiles'] else 0
+            userCommitInfo['additions'] += commit['additions'] if commit['additions'] else 0
+            userCommitInfo['deletions'] += commit['deletions'] if commit['deletions'] else 0
 
         print(userCommitInfo)
+        print(errorNoneGit)
         developerOverview = developerOverviewAux(userInfo, repositories, userInfoAllTime, userCommitInfo)
         devInfos.append(developerOverview)
     saveCSV(devInfos, standardDirectory+'\\devInfos.csv')
@@ -126,7 +133,8 @@ if __name__ == '__main__':
 
     # devList = ['QuincyLarson']
     # devList = ['rafaelfranca']
-    # devList = ['spastorino']
+    # devList = ['eileencodes']
+    devList = ['maclover7']
     path = 'C:\\Users\\luiz_\\Desktop\\data'
-    devList = getContributors()
+    # devList = getContributors()
     main(path, devList)
