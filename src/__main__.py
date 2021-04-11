@@ -1,4 +1,4 @@
-from src.userGitHubInfo import getUserInfo, getUserInfByYear, repositoryUser, getUserRepositoryCommit, userCommitDiffInfo, getContributors
+from src.userGitHubInfo import getUserInfo, getUserInfByMonth, getUserInfByYear, repositoryUser, getUserRepositoryCommit, userCommitDiffInfo, getContributors
 from src.fileAnalyze import saveJson
 import pandas as pd
 import json
@@ -64,26 +64,24 @@ def developerOverviewAux(userInfo, repositories, userInfoAllTime, userCommitInfo
 
 def main(standardDirectory, listDev):
     devInfos = []
+    errorNoneGit = {}
 
     for loginUser in listDev:
+        print(loginUser)
 
-        # standardDirectory += loginUser
-        # if not os.path.exists(standardDirectory):
-        #     os.mkdir(standardDirectory)
-
-        print('\n\n\n\n\n')
-        print('Login User', loginUser)
-        print('---------------')
-        print('\tuserInfo')
-        print('---------------')
+        standardDirectory += loginUser
+        if not os.path.exists(standardDirectory):
+            os.mkdir(standardDirectory)
 
         userInfo = getUserInfo(loginUser)
-        userInfoByYear, keys = getUserInfByYear(loginUser, userInfo['data']['user']['createdAt'])
-        userInfoAllTime = pd.DataFrame.from_dict(userInfoByYear, orient='index', columns=keys).sum(axis=0)
 
-        print('---------------')
-        print('repositoryUser')
-        print('---------------')
+        # userInfoByYear, keys = getUserInfByYear(loginUser, userInfo['data']['user']['createdAt'])
+        # userInfoAllTime = pd.DataFrame.from_dict(userInfoByYear, orient='index', columns=keys).sum(axis=0)
+
+        userInfByMonth, keys = getUserInfByMonth(loginUser, userInfo['data']['user']['createdAt'])
+        saveDictCSV(userInfByMonth, 'index', keys, standardDirectory + '\\userInfByMonth.csv')
+
+        exit(0)
         OWNER, COLLABORATOR = repositoryUser(loginUser)
         repositories = {
             'owner': OWNER,
@@ -101,20 +99,20 @@ def main(standardDirectory, listDev):
             'additions': 0,
             'deletions': 0
         }
-        errorNoneGit = {}
+
         for index, commit in enumerate(userCommits):
             if not commit:
                 errorNoneGit[index] = commit
                 continue
-
             userCommitInfo['changedFiles'] += commit['changedFiles'] if commit['changedFiles'] else 0
             userCommitInfo['additions'] += commit['additions'] if commit['additions'] else 0
             userCommitInfo['deletions'] += commit['deletions'] if commit['deletions'] else 0
 
         print(userCommitInfo)
-        print(errorNoneGit)
+
         developerOverview = developerOverviewAux(userInfo, repositories, userInfoAllTime, userCommitInfo)
         devInfos.append(developerOverview)
+    print(errorNoneGit)
     saveCSV(devInfos, standardDirectory+'\\devInfos.csv')
 
         # userCommitDiffInfo(userCommits)
@@ -132,9 +130,10 @@ if __name__ == '__main__':
         exit(1)
 
     # devList = ['QuincyLarson']
-    # devList = ['rafaelfranca']
+    devList = ['rafaelfranca']
     # devList = ['eileencodes']
-    devList = ['maclover7']
-    path = 'C:\\Users\\luiz_\\Desktop\\data'
+    # devList = ['maclover7']
+    # path = 'C:\\Users\\luiz_\\Desktop\\data'
+    path = 'C:\\Users\\luiz\\Desktop\\data'
     # devList = getContributors()
     main(path, devList)
