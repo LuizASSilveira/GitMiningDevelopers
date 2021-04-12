@@ -1,97 +1,59 @@
 from src.userGitHubInfo import getUserInfo, getUserInfByMonth, getUserInfByYear, repositoryUser, getUserRepositoryCommit, userCommitDiffInfo, getContributors
-from src.fileAnalyze import saveJson
+from src.utils import developerOverviewAux, saveCSV, jsonPrettify, saveDictCSV
 import pandas as pd
-import json
+import numpy as np
 import sys
 import os
 
 
-def jsonPrettify(data):
-    print(json.dumps(data, indent=4, ensure_ascii=False))
-
-
-def saveCSV(data, path):
-    pd.json_normalize(data).to_csv(path)
-
-
-def saveDictCSV(data, orient, columns, path):
-    pd.DataFrame.from_dict(data, orient=orient, columns=columns).to_csv(path)
-
-
-def developerOverviewAux(userInfo, repositories, userInfoAllTime, userCommitInfo):
-    developerOverview = {
-        "login": userInfo['data']['user']['login'],
-        "nome": userInfo['data']['user']['name'],
-        "email": userInfo['data']['user']['email'],
-        "dataCriacaoContaGithub": userInfo['data']['user']['createdAt'],
-        "location": userInfo['data']['user']['location'],
-
-        "company": userInfo['data']['user']['company'],
-        "watching": userInfo['data']['user']['watching']['totalCount'],
-        "followers": userInfo['data']['user']['followers']['totalCount'],
-        "following": userInfo['data']['user']['following']['totalCount'],
-        "organizations": userInfo['data']['user']['organizations']['totalCount'],
-
-        "projects": userInfo['data']['user']['projects']['totalCount'],
-        "repositories": userInfo['data']['user']['repositories']['totalCount'],
-        "repositoriesOwner": len(repositories['owner']),
-        "repositoriesCollaborator": len(repositories['collaborator']),
-
-        "pullRequests": userInfo['data']['user']['pullRequests']['totalCount'],
-        "issues": userInfo['data']['user']['issues']['totalCount'],
-        "gists": userInfo['data']['user']['gists']['totalCount'],
-
-        "commitComments": userInfo['data']['user']['commitComments']['totalCount'],
-        "issueComments": userInfo['data']['user']['issueComments']['totalCount'],
-        "gistComments": userInfo['data']['user']['gistComments']['totalCount'],
-
-        "totalIssueContributions": userInfoAllTime['totalIssueContributions'],
-        "totalCommitContributions": userInfoAllTime['totalCommitContributions'],
-        "totalRepositoryContributions": userInfoAllTime['totalRepositoryContributions'],
-        "totalPullRequestContributions": userInfoAllTime['totalPullRequestContributions'],
-        "totalPullRequestReviewContributions": userInfoAllTime['totalPullRequestReviewContributions'],
-        "totalRepositoriesWithContributedIssues": userInfoAllTime['totalRepositoriesWithContributedIssues'],
-        "totalRepositoriesWithContributedCommits": userInfoAllTime['totalRepositoriesWithContributedCommits'],
-        "totalRepositoriesWithContributedPullRequests": userInfoAllTime['totalRepositoriesWithContributedPullRequests'],
-        "totalRepositoriesWithContributedPullRequestReviews": userInfoAllTime['totalRepositoriesWithContributedPullRequestReviews'],
-
-        'totalChangedFiles': userCommitInfo['changedFiles'],
-        'totalAdditions': userCommitInfo['additions'],
-        'totalDeletions': userCommitInfo['deletions']
+def devContributionsCollection(standardDirectory, listDev):
+    devCollections = {
+        'totalIssueContributions': {},
+        'totalCommitContributions': {},
+        'totalRepositoryContributions': {},
+        'totalPullRequestContributions': {},
+        'totalPullRequestReviewContributions': {},
+        'totalRepositoriesWithContributedIssues': {},
+        'totalRepositoriesWithContributedCommits': {},
+        'totalRepositoriesWithContributedPullRequests': {},
+        'totalRepositoriesWithContributedPullRequestReviews': {}
     }
-    return developerOverview
+
+    for loginDev in listDev:
+        devInfo = getUserInfo(loginDev)
+        devInfByMonth, keys = getUserInfByMonth(loginDev, devInfo['data']['user']['createdAt'])
+        print(keys)
+
+        for index in range(len(keys)):
+            devCollections[keys[index]][loginDev] = dict(zip(devInfByMonth.keys(), np.array(list(devInfByMonth.values()))[:, index]))
+
+    print(pd.DataFrame.from_dict(devCollections['totalIssueContributions'], orient='index'))
+
+    for key in devCollections.keys():
+        pd.DataFrame.from_dict(devCollections[key], orient='index').to_csv('{}{}.csv'.format(standardDirectory, key))
 
 
 def main(standardDirectory, listDev):
     devInfos = []
     errorNoneGit = {}
 
-    for loginUser in listDev:
-        print(loginUser)
+    for loginDev in listDev:
+        print(loginDev)
 
-        standardDirectory += loginUser
         if not os.path.exists(standardDirectory):
             os.mkdir(standardDirectory)
 
-        userInfo = getUserInfo(loginUser)
+        devInfo = getUserInfo(loginDev)
+        userInfoByYear, keys = getUserInfByYear(loginDev, devInfo['data']['user']['createdAt'])
+        userInfoAllTime = pd.DataFrame.from_dict(userInfoByYear, orient='index', columns=keys).sum(axis=0)
 
-        # userInfoByYear, keys = getUserInfByYear(loginUser, userInfo['data']['user']['createdAt'])
-        # userInfoAllTime = pd.DataFrame.from_dict(userInfoByYear, orient='index', columns=keys).sum(axis=0)
-
-        userInfByMonth, keys = getUserInfByMonth(loginUser, userInfo['data']['user']['createdAt'])
-        saveDictCSV(userInfByMonth, 'index', keys, standardDirectory + '\\userInfByMonth.csv')
-
-        exit(0)
-        OWNER, COLLABORATOR = repositoryUser(loginUser)
+        OWNER, COLLABORATOR = repositoryUser(loginDev)
         repositories = {
             'owner': OWNER,
             'collaborator': COLLABORATOR
         }
 
-        print('---------------')
-        print('getUserRepositoryCommit')
-        print('---------------')
-        userId = userInfo['data']['user']['id']
+        userId = devInfo['data']['user']['id']
         userCommits = getUserRepositoryCommit(userId, repositories['owner'] + repositories['collaborator'])
         # userCommits = getUserRepositoryCommit(userId, repositories['collaborator'])
         userCommitInfo = {
@@ -110,13 +72,12 @@ def main(standardDirectory, listDev):
 
         print(userCommitInfo)
 
-        developerOverview = developerOverviewAux(userInfo, repositories, userInfoAllTime, userCommitInfo)
+        developerOverview = developerOverviewAux(devInfo, repositories, userInfoAllTime, userCommitInfo)
         devInfos.append(developerOverview)
     print(errorNoneGit)
-    saveCSV(devInfos, standardDirectory+'\\devInfos.csv')
+    saveCSV(devInfos, standardDirectory+'devInfos.csv')
 
         # userCommitDiffInfo(userCommits)
-
         # saveCSV(developerOverview, standardDirectory + '\\developerOverview.csv')
         # saveDictCSV(userInfoByYear, 'index', keys, standardDirectory + '\\userInfoByYearTet.csv')
 
@@ -130,10 +91,11 @@ if __name__ == '__main__':
         exit(1)
 
     # devList = ['QuincyLarson']
-    devList = ['rafaelfranca']
+    devList = ['rafaelfranca', 'eileencodes']
     # devList = ['eileencodes']
     # devList = ['maclover7']
     # path = 'C:\\Users\\luiz_\\Desktop\\data'
-    path = 'C:\\Users\\luiz\\Desktop\\data'
+    path = 'C:\\Users\\luiz\\Desktop\\data\\'
     # devList = getContributors()
-    main(path, devList)
+    # main(path, devList)
+    devContributionsCollection(path, devList)

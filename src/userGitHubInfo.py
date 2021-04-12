@@ -89,9 +89,10 @@ def getUserInfByMonth(loginUser, dateCreated):
             month += 1
 
         yearCreated += 1
-        # if yearCreated == 2010:
-        #     break
-    return userYearInfo, keys
+        if yearCreated == 2010 or yearCreated == 2012:
+            break
+    return userYearInfo, list(keys)
+
 
 def repositoryUser(loginUser, numPage=80):
     queryVariables = {
@@ -177,8 +178,6 @@ def userCommitDiffInfo(userCommits):
         print('-->', len(add))
         print('-->', len(remove))
 
-    print('addicted -->', len(addicted))
-    print('deletions -->', len(deletions))
     print('invalidCommit -->', len(invalidCommit))
     print('invalidCommit -->', invalidCommit)
     print('invalidCommit -->', invalidCommit.keys())
