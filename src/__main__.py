@@ -22,15 +22,19 @@ def devContributionsCollection(standardDirectory, listDev):
     for loginDev in listDev:
         devInfo = getUserInfo(loginDev)
         devInfByMonth, keys = getUserInfByMonth(loginDev, devInfo['data']['user']['createdAt'])
-        print(keys)
-
         for index in range(len(keys)):
-            devCollections[keys[index]][loginDev] = dict(zip(devInfByMonth.keys(), np.array(list(devInfByMonth.values()))[:, index]))
+            devCollections[keys[index]][loginDev] = dict(zip(list(devInfByMonth.keys()), np.array(list(devInfByMonth.values()))[:, index]))
 
-    print(pd.DataFrame.from_dict(devCollections['totalIssueContributions'], orient='index'))
+    # df = pd.DataFrame.from_dict(devCollections['totalCommitContributions'], orient='index').fillna(0).astype('int64')
+    # df.to_csv('C:\\Users\\luiz_\\Desktop\\teste.csv')
 
     for key in devCollections.keys():
-        pd.DataFrame.from_dict(devCollections[key], orient='index').to_csv('{}{}.csv'.format(standardDirectory, key))
+        df = pd.DataFrame.from_dict(devCollections[key], orient='index').fillna(0).astype('int64')
+        df.rename(columns={'Unnamed: 0': 'Developer'}, inplace=True)
+        df = df[[df.columns[0]] + df.columns[1:].sort_values(key=lambda x: pd.to_datetime(x, format='%Y/%m')).tolist()]
+
+        print(df)
+        df.to_csv('{}{}.csv'.format(standardDirectory, key))
 
 
 def main(standardDirectory, listDev):
@@ -91,11 +95,11 @@ if __name__ == '__main__':
         exit(1)
 
     # devList = ['QuincyLarson']
-    devList = ['rafaelfranca', 'eileencodes']
+    devList = ['rafaelfranca', 'eileencodes', 'lifo']
     # devList = ['eileencodes']
     # devList = ['maclover7']
-    # path = 'C:\\Users\\luiz_\\Desktop\\data'
-    path = 'C:\\Users\\luiz\\Desktop\\data\\'
+    path = 'C:\\Users\\luiz_\\Desktop\\data\\'
+    # path = 'C:\\Users\\luiz\\Desktop\\data\\'
     # devList = getContributors()
     # main(path, devList)
     devContributionsCollection(path, devList)
