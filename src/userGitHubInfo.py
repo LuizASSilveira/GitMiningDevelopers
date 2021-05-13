@@ -32,7 +32,6 @@ def getUserInfByYear(loginUser, dateCreated):
     userYearInfo = {}
 
     while yearCreated <= todayYear:
-
         yearCreated = yearCreated
         queryVariables = {
             "nameUser": loginUser,
@@ -60,7 +59,6 @@ def getUserInfByMonth(loginUser, dateCreated):
     userYearInfo = {}
 
     while yearCreated <= todayYear:
-
         yearCreated = yearCreated
 
         if flagMonth:
@@ -89,8 +87,6 @@ def getUserInfByMonth(loginUser, dateCreated):
             month += 1
 
         yearCreated += 1
-        if yearCreated == 2010 or yearCreated == 2012:
-            break
     return userYearInfo, list(keys)
 
 

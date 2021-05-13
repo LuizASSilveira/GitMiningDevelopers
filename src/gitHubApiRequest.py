@@ -14,6 +14,8 @@ def requestApiGitHubV4(query, variables={}, numAttempt=20):
             if request.status_code == 200:
                 return request.json()
             else:
+                # print(request)
+                # print(request.text)
                 print('Tentativa Request Api V4 GitHub n° ' + str(20 - numAttempt + 1))
                 if 'timeout' in request.json()["errors"][0]["message"]:
                     raise Exception

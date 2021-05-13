@@ -1,5 +1,5 @@
 from src.userGitHubInfo import getUserInfo, getUserInfByMonth, getUserInfByYear, repositoryUser, getUserRepositoryCommit, userCommitDiffInfo, getContributors
-from src.utils import developerOverviewAux, saveCSV, jsonPrettify, saveDictCSV
+from src.utils import developerOverviewAux, saveCSV, jsonPrettify, saveDictCSV, saveJson, createFolderIfDoesntExist
 import pandas as pd
 import numpy as np
 import sys
@@ -25,27 +25,22 @@ def devContributionsCollection(standardDirectory, listDev):
         for index in range(len(keys)):
             devCollections[keys[index]][loginDev] = dict(zip(list(devInfByMonth.keys()), np.array(list(devInfByMonth.values()))[:, index]))
 
-    # df = pd.DataFrame.from_dict(devCollections['totalCommitContributions'], orient='index').fillna(0).astype('int64')
-    # df.to_csv('C:\\Users\\luiz_\\Desktop\\teste.csv')
-
     for key in devCollections.keys():
+        pd.set_option('display.max_columns', 29)
         df = pd.DataFrame.from_dict(devCollections[key], orient='index').fillna(0).astype('int64')
         df.rename(columns={'Unnamed: 0': 'Developer'}, inplace=True)
         df = df[[df.columns[0]] + df.columns[1:].sort_values(key=lambda x: pd.to_datetime(x, format='%Y/%m')).tolist()]
-
-        print(df)
         df.to_csv('{}{}.csv'.format(standardDirectory, key))
 
 
-def main(standardDirectory, listDev):
+def devInfoMining(standardDirectory, listDev):
     devInfos = []
     errorNoneGit = {}
 
     for loginDev in listDev:
         print(loginDev)
 
-        if not os.path.exists(standardDirectory):
-            os.mkdir(standardDirectory)
+        createFolderIfDoesntExist(standardDirectory)
 
         devInfo = getUserInfo(loginDev)
         userInfoByYear, keys = getUserInfByYear(loginDev, devInfo['data']['user']['createdAt'])
@@ -59,7 +54,6 @@ def main(standardDirectory, listDev):
 
         userId = devInfo['data']['user']['id']
         userCommits = getUserRepositoryCommit(userId, repositories['owner'] + repositories['collaborator'])
-        # userCommits = getUserRepositoryCommit(userId, repositories['collaborator'])
         userCommitInfo = {
             'changedFiles': 0,
             'additions': 0,
@@ -74,16 +68,23 @@ def main(standardDirectory, listDev):
             userCommitInfo['additions'] += commit['additions'] if commit['additions'] else 0
             userCommitInfo['deletions'] += commit['deletions'] if commit['deletions'] else 0
 
-        print(userCommitInfo)
+        userFolder = '{}{}\\'.format(standardDirectory, loginDev)
+        createFolderIfDoesntExist(userFolder)
+        saveJson(userCommits, '{}{}'.format(userFolder, 'userCommit.json'))
 
+        # print(userCommits)
+
+        print(userCommitInfo)
         developerOverview = developerOverviewAux(devInfo, repositories, userInfoAllTime, userCommitInfo)
         devInfos.append(developerOverview)
-    print(errorNoneGit)
-    saveCSV(devInfos, standardDirectory+'devInfos.csv')
 
-        # userCommitDiffInfo(userCommits)
-        # saveCSV(developerOverview, standardDirectory + '\\developerOverview.csv')
-        # saveDictCSV(userInfoByYear, 'index', keys, standardDirectory + '\\userInfoByYearTet.csv')
+    print('\n\nNone Error Git --> ', errorNoneGit)
+
+    standardDirectory = '{}\\{}\\'.format(standardDirectory, 'generalInformation')
+    createFolderIfDoesntExist(standardDirectory)
+
+    saveCSV(devInfos, standardDirectory + 'devInfos.csv')
+    # userCommitDiffInfo(userCommits)
 
 
 if __name__ == '__main__':
@@ -99,7 +100,6 @@ if __name__ == '__main__':
     # devList = ['eileencodes']
     # devList = ['maclover7']
     path = 'C:\\Users\\luiz_\\Desktop\\data\\'
-    # path = 'C:\\Users\\luiz\\Desktop\\data\\'
     # devList = getContributors()
-    # main(path, devList)
-    devContributionsCollection(path, devList)
+    devInfoMining(path, devList)
+    # devContributionsCollection(path, devList)

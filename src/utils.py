@@ -1,5 +1,6 @@
-import json
 import pandas as pd
+import json
+import os
 
 
 def developerOverviewAux(userInfo, repositories, userInfoAllTime, userCommitInfo):
@@ -56,3 +57,15 @@ def saveCSV(data, path):
 
 def saveDictCSV(data, orient, columns, path):
     pd.DataFrame.from_dict(data, orient=orient, columns=columns).to_csv(path)
+
+
+def createFolderIfDoesntExist(standardDirectory):
+    if not os.path.exists(standardDirectory):
+        os.mkdir(standardDirectory)
+
+
+def saveJson(data, path, typeOpen='w', encodingFile='UTF-8'):
+    file = open(path, typeOpen, encoding=encodingFile)
+    if data:
+        json.dump(data, file, indent=4)
+    file.close()
