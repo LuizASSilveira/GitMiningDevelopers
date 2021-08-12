@@ -1,7 +1,11 @@
-from src.userGitHubInfo import getUserInfo, getUserInfByMonth, getUserInfByYear, repositoryUser, getUserRepositoryCommit, userCommitDiffInfo, getContributors
+from pprint import pprint
+
+from src.userGitHubInfo import getUserInfo, getUserInfByMonth, getUserInfByYear, repositoryUser, getUserRepositoryCommit, userCommitDiffInfo
 from src.utils import developerOverviewAux, saveCSV, jsonPrettify, saveDictCSV, saveJson, createFolderIfDoesntExist
+from src.selectContributors import getContributors
 import pandas as pd
 import numpy as np
+import json
 import sys
 import os
 
@@ -23,7 +27,8 @@ def devContributionsCollection(standardDirectory, listDev):
         devInfo = getUserInfo(loginDev)
         devInfByMonth, keys = getUserInfByMonth(loginDev, devInfo['data']['user']['createdAt'])
         for index in range(len(keys)):
-            devCollections[keys[index]][loginDev] = dict(zip(list(devInfByMonth.keys()), np.array(list(devInfByMonth.values()))[:, index]))
+            devCollections[keys[index]][loginDev] = dict(
+                zip(list(devInfByMonth.keys()), np.array(list(devInfByMonth.values()))[:, index]))
 
     for key in devCollections.keys():
         pd.set_option('display.max_columns', 29)
@@ -31,6 +36,14 @@ def devContributionsCollection(standardDirectory, listDev):
         df.rename(columns={'Unnamed: 0': 'Developer'}, inplace=True)
         df = df[[df.columns[0]] + df.columns[1:].sort_values(key=lambda x: pd.to_datetime(x, format='%Y/%m')).tolist()]
         df.to_csv('{}{}.csv'.format(standardDirectory, key))
+
+
+def assisAvg(dataDevCollection, inManyYears):
+    dataDevCollection['totalRepositoriesWithContributedPullRequestReviews'] = dataDevCollection['totalRepositoriesWithContributedPullRequestReviews']/inManyYears
+    dataDevCollection['totalRepositoriesWithContributedPullRequests'] = dataDevCollection['totalRepositoriesWithContributedPullRequests']/inManyYears
+    dataDevCollection['totalRepositoriesWithContributedCommits'] = dataDevCollection['totalRepositoriesWithContributedCommits']/inManyYears
+    dataDevCollection['totalRepositoriesWithContributedIssues'] = dataDevCollection['totalRepositoriesWithContributedIssues']/inManyYears
+    return dataDevCollection
 
 
 def devInfoMining(standardDirectory, listDev):
@@ -43,8 +56,9 @@ def devInfoMining(standardDirectory, listDev):
         createFolderIfDoesntExist(standardDirectory)
 
         devInfo = getUserInfo(loginDev)
-        userInfoByYear, keys = getUserInfByYear(loginDev, devInfo['data']['user']['createdAt'])
+        userInfoByYear, keys, inManyYears = getUserInfByYear(loginDev, devInfo['data']['user']['createdAt'])
         userInfoAllTime = pd.DataFrame.from_dict(userInfoByYear, orient='index', columns=keys).sum(axis=0)
+        userInfoAllTime = assisAvg(userInfoAllTime, inManyYears)
 
         OWNER, COLLABORATOR = repositoryUser(loginDev)
         repositories = {
@@ -91,15 +105,15 @@ if __name__ == '__main__':
     try:
         sys.argv[1]
     except IndexError:
-        print('Please, set the GITHUB_TOKEN environment variable with your OAuth token ('
+        print('pass your github token as parameter ('
               'https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line)')
         exit(1)
 
-    # devList = ['QuincyLarson']
+    path = '{}\\{}'.format(os.path.dirname(os.path.abspath(__file__)), 'data')
+    createFolderIfDoesntExist(path)
+
     devList = ['rafaelfranca', 'eileencodes', 'lifo']
-    # devList = ['eileencodes']
-    # devList = ['maclover7']
-    path = 'C:\\Users\\luiz_\\Desktop\\data\\'
-    # devList = getContributors()
+    # devList = json.load(open('data/devs.json', ))
+
     devInfoMining(path, devList)
     # devContributionsCollection(path, devList)

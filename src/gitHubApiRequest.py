@@ -2,8 +2,10 @@ import requests
 import time
 import sys
 
-
-headers = {"Authorization": 'Bearer {0}'.format(sys.argv[1])}
+try:
+    headers = {"Authorization": 'Bearer {0}'.format(sys.argv[1])}
+except:
+    pass
 
 
 def requestApiGitHubV4(query, variables={}, numAttempt=20):

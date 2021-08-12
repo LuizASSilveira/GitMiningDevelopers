@@ -1,13 +1,6 @@
 from src.gitHubApiRequest import requestApiGitHubV4, performRequest
 from src.fileAnalyze import userCommitModification
 from datetime import date
-import pandas as pd
-
-
-def getContributors(size=50):
-    resp = performRequest(
-        'https://api.github.com/repos/rails/rails/contributors?per_page={}&order=desc'.format(size)).json()
-    return [urlUser['login'] for urlUser in resp][:size]
 
 
 def getQueryFile(nameQuery):
@@ -31,6 +24,8 @@ def getUserInfByYear(loginUser, dateCreated):
     todayYear = int(todayDate[0])
     userYearInfo = {}
 
+    inManyYears = todayYear - yearCreated
+
     while yearCreated <= todayYear:
         yearCreated = yearCreated
         queryVariables = {
@@ -44,7 +39,8 @@ def getUserInfByYear(loginUser, dateCreated):
         keys = userYearInfo[yearCreated].keys()
         yearCreated += 1
 
-    return userYearInfo, keys
+    # fazer aki divisao
+    return userYearInfo, keys, inManyYears
 
 
 def getUserInfByMonth(loginUser, dateCreated):
