@@ -34,7 +34,11 @@ def getUserInfByYear(loginUser, dateCreated):
             "toDate": '{}-12-31T23:59:59Z'.format(yearCreated),
         }
         query = getQueryFile('userInfoContributionsCollection')
-        userYearInfo[yearCreated] = requestApiGitHubV4(query, queryVariables)['data']['user']["contributionsCollection"]
+
+        resp = requestApiGitHubV4(query, queryVariables)
+        if not resp['data']['user']["contributionsCollection"]:
+            print("\n\n", resp, "\n\n")
+        userYearInfo[yearCreated] = resp['data']['user']["contributionsCollection"]
         print('{}: {}'.format(yearCreated, list(userYearInfo[yearCreated].values())))
         keys = userYearInfo[yearCreated].keys()
         yearCreated += 1
@@ -76,6 +80,8 @@ def getUserInfByMonth(loginUser, dateCreated):
                 "toDate": '{}-{}-31T23:59:59Z'.format(yearCreated, monthAux),
             }
             query = getQueryFile('userInfoContributionsCollection')
+
+
             userMonthInfo[month] = requestApiGitHubV4(query, queryVariables)['data']['user']["contributionsCollection"]
             print('{}/{}: {}'.format(yearCreated, month, list(userMonthInfo[month].values())))
             userYearInfo['{}/{}'.format(yearCreated, month)] = list(userMonthInfo[month].values())

@@ -2,7 +2,7 @@ import json
 import arrow
 from src.gitHubApiRequest import performRequest
 
-path = 'C:\\Users\\luiz_\\Desktop\\data\\rafaelfranca\\userCommit.json'
+path = 'C:\\Users\\luiz_\\OneDrive\\Área de Trabalho\\gitMiningDevelopers\\src\\data\\devs\\adamalton\\userCommit.json'
 file = open(path, 'r')
 dev = json.load(file)
 file.close()

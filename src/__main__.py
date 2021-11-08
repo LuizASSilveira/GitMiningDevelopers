@@ -25,6 +25,7 @@ def devContributionsCollection(standardDirectory, listDev):
 
     for loginDev in listDev:
         devInfo = getUserInfo(loginDev)
+        pprint(devInfo)
         devInfByMonth, keys = getUserInfByMonth(loginDev, devInfo['data']['user']['createdAt'])
         for index in range(len(keys)):
             devCollections[keys[index]][loginDev] = dict(
@@ -112,8 +113,8 @@ if __name__ == '__main__':
     path = '{}\\{}'.format(os.path.dirname(os.path.abspath(__file__)), 'data')
     createFolderIfDoesntExist(path)
 
-    devList = ['rafaelfranca', 'eileencodes', 'lifo']
-    # devList = json.load(open('data/devs.json', ))
+    # devList = ['rafaelfranca', 'eileencodes', 'lifo']
+    devList = json.load(open('data/devs.json', ))
 
-    devInfoMining(path, devList)
-    # devContributionsCollection(path, devList)
+    # devInfoMining(path, devList)
+    # devContributionsCollection(path, devList[:1000])
