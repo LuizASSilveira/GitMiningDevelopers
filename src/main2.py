@@ -1,10 +1,12 @@
 import json
+from pprint import pprint
+
 import arrow
 from src.gitHubApiRequest import performRequest
 
-path = 'C:\\Users\\luiz_\\OneDrive\\Área de Trabalho\\gitMiningDevelopers\\src\\data\\devs\\adamalton\\userCommit.json'
+path = 'C:\\Users\\luiz\\Desktop\\userCommit.json'
 file = open(path, 'r')
-dev = json.load(file)
+commits = json.load(file)
 file.close()
 
 devCommiter = {}
@@ -18,14 +20,19 @@ def getLanguageFile(commits):
             extentions.append(line.split('/')[-1].split('.')[-1])
     return extentions
 
+devFiles = {}
+for commit in commits:
+    dateCommit = arrow.get(commit['committedDate']).format('YYYY/MM')
+    idCommit = commit['url'].split('/')[-1]
 
-for d in dev:
-    dateCommit = arrow.get(d['committedDate']).format('YYYY/MM')
-    print(d['url'] + '.diff')
-    commitFile = performRequest(d['url'] + '.diff').text
-    print(getLanguageFile(commitFile))
+    print(commit['url'] + '.diff')
+    commitFile = performRequest(commit['url'] + '.diff').text
 
-    # if not (dateCommit in devCommiter.keys()):
-    #     devCommiter[dateCommit] = [dateCommit]
+    if dateCommit in devFiles.keys():
+        devFiles[dateCommit].append({idCommit: getLanguageFile(commitFile)})
+    else:
+        devFiles[dateCommit] = [{idCommit: getLanguageFile(commitFile)}]
+
+pprint(devFiles)
 
 

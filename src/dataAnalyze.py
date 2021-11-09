@@ -3,6 +3,7 @@ from pprint import pprint
 import pandas as pd
 import json
 
+
 def devNotColetede(dataframe, devList):
     print('Total: ', devList.__len__())
     print('Sem Repetidos: ', set(devList).__len__())
