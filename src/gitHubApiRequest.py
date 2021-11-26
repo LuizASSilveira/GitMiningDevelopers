@@ -30,19 +30,21 @@ def requestApiGitHubV4(query, variables={}, numAttempt=20):
     return {}
 
 
-def performRequest(url, numAttempt=5):
-    attempt = 1
+def performRequest(url, numAttempt=20):
+    attempt = 0
     while True:
         try:
-            request = requests.get(url, headers=headers)
+            request = requests.get(url, headers=headers, timeout=(30, 40))
             if request.status_code == 200:
+                return request
+            elif (request.status_code == 403 and 'containing PDF or PS' in request.text) or (request.status_code == 404):
                 return request
             elif attempt > numAttempt:
                 return request
             else:
                 attempt += 1
                 print('dormindo: tentativa {}'.format(attempt))
-                time.sleep(5)
+                time.sleep(1 if attempt < 2 else 5 if attempt < 10 else 30)
         except requests.exceptions.RequestException as e:
             print('performRequest: ', e)
-            time.sleep(5)
+            time.sleep(50)
