@@ -119,7 +119,6 @@ def listar_arquivos(caminho=None):
 
 
 def getLanguageFile(commits):
-    commits = commits.splitlines()
     extentions = []
     for line in commits:
         if 'diff' in line[:4]:
@@ -169,11 +168,11 @@ def colleteCommits(url, devColetede, dev750):
     arquivos = listar_arquivos(url + '\\devs')
     # print(list(devColetede['login']).index('bripkens'))
 
-    for index, dev in enumerate(dev750[10:]):
+    for index, dev in enumerate(dev750[250:]):
         print(index, ' ->', dev)
         filePath = url + '\\devs\\' + dev + "\\devsExtencion.json"
 
-        if (not dev in arquivos) or os.path.isfile(filePath):
+        if (not dev in arquivos):
             print('PULOU ->', dev)
             continue
 
@@ -185,17 +184,16 @@ def colleteCommits(url, devColetede, dev750):
 
             devFiles = {}
             print(len(commits))
-            for ind, commit in enumerate(commits[:2]):
+            for ind, commit in enumerate(commits):
 
                 dateCommit = arrow.get(commit['committedDate']).format('YYYY/MM')
                 idCommit = commit['url'].split('/')[-1]
-
                 if ind % 100 == 0:
                     print(ind, '-> ', commit['url'] + '.diff')
 
                 commitFile = performRequest(commit['url'] + '.diff').text
                 commitFile = commitFile.splitlines()
-                print()
+
                 if commitFile.__len__() < 3:
                     continue
 
@@ -204,13 +202,11 @@ def colleteCommits(url, devColetede, dev750):
                 else:
                     devFiles[dateCommit] = [{idCommit: commitFile}]
 
-                print(devFiles)
             a_file = open(filePath, "w")
             json.dump(devFiles, a_file)
             a_file.close()
 
         except:
-
             print('Error ---> ', dev)
             continue
 
@@ -243,39 +239,127 @@ def dev750(devColetede, devProjWithUser):
 
 
 def processCommit(devs, url):
-
-    for dev in devs[:1]:
-        devFiles = []
-
-
+    for dev in devs:
         fileCommit = url + '\\devs\\' + dev + "\\devsExtencion.json"
         fileDevLanguages = url + '\\devs\\' + dev + "\\devslanguages.json"
         if (not os.path.isfile(fileCommit)) or os.path.isfile(fileDevLanguages):
             continue
 
-        commits = json.load(open(fileCommit, 'r'))
+        dateCommits = json.load(open(fileCommit, 'r'))
+        devFiles = {}
+        print(dev)
+        for date in dateCommits.keys():
+            for commits in dateCommits[date]:
+                for commitId in commits.keys():
+                    if date in devFiles.keys():
+                        devFiles[date].append({commitId: getLanguageFile(commits[commitId])})
+                    else:
+                        devFiles[date] = [{commitId: getLanguageFile(commits[commitId])}]
 
-        # for commit in commits:
-            # print(commit)
-            # print('\n\n')
-
-            # if dateCommit in devFiles.keys():
-            #     devFiles[dev][dateCommit].append({idCommit: getLanguageFile(commitFile)})
-            # else:
-            #     devFiles[dev][dateCommit] = [{idCommit: getLanguageFile(commitFile)}]
+        a_file = open(url + '\\devs\\' + dev + '\\devslanguages.json', "w")
+        json.dump(devFiles, a_file)
+        a_file.close()
 
 
+def processLanguagem(devList, url):
+
+    languagesExtentions = {
+        # 'all': ['cpp', 'cxx', 'c', 'h', 'java', 'hh', 'hpp', 'h++', 'hxx', 'js', 'jsx', 'c', 'h', 'cs', 'py', 'go', 'php', 'kt', 'kts', 'rs', 'rlib', 'dart', 'rb', 'readme'],
+        'JavaScript': ['js', 'jsx'],
+        'Java': ['java'],
+        'C++': ['cpp', 'cxx', 'c', 'C', 'h', 'hh', 'hpp', 'h++', 'hxx'],
+        'C': ['c', 'h'],
+        'C#': ['cs'],
+        'Python': ['py'],
+        'Go': ['go'],
+        'PHP': ['php'],
+        'Kotlin': ['kt', 'kts'],
+        'Rust': ['rs', 'rlib'],
+        'Dart': ['dart'],
+        'Ruby': ['rb']
+    }
+
+    for dev in devList:
+        fileDevLanguages = url + 'devs\\' + dev + "\\devslanguages.json"
+        if not os.path.isfile(fileDevLanguages):
+            continue
+
+        devCommit = json.load(open(fileDevLanguages, 'r'))
+        extByDate = {}
+        for date in devCommit.keys():
+            languagesOccurrences = {
+                'JavaScript': 0,
+                'Java': 0,
+                 'C++': 0,
+                'C': 0,
+                'C#': 0,
+                'Python': 0,
+                'Go': 0,
+                'PHP': 0,
+                'Kotlin': 0,
+                'Rust': 0,
+                'Dart': 0,
+                'Ruby': 0
+            }
+            for commits in devCommit[date]:
+                for commit in commits.keys():
+                    for lang in languagesExtentions.keys():
+                        for ext in languagesExtentions[lang]:
+                            languagesOccurrences[lang] += commits[commit].count(ext)
+            extByDate[date] = languagesOccurrences
+
+        a_file = open(url + '\\devs\\' + dev + '\\extByMonth.json', "w")
+        json.dump(extByDate, a_file)
+        a_file.close()
+
+
+def generateDevsByLanguage(devList, url):
+    listDevsExt = {}
+    for dev in devList:
+        fileDevExtentions = url + 'devs\\' + dev + "\\extByMonth.json"
+        if not os.path.isfile(fileDevExtentions):
+            continue
+
+        devExtentions = json.load(open(fileDevExtentions, 'r'))
+        languagesOccurrences = {
+                'JavaScript': 0,
+                'Java': 0,
+                 'C++': 0,
+                'C': 0,
+                'C#': 0,
+                'Python': 0,
+                'Go': 0,
+                'PHP': 0,
+                'Kotlin': 0,
+                'Rust': 0,
+                'Dart': 0,
+                'Ruby': 0
+            }
+
+        for date in devExtentions.keys():
+            for lang in languagesOccurrences.keys():
+                languagesOccurrences[lang] += devExtentions[date][lang]
+
+        listDevsExt[dev] = languagesOccurrences
+
+    df = pd.DataFrame(data=listDevsExt)
+    dfT = df.T
+    dfT.to_csv('C:\\Users\\luiz_\\OneDrive\\Área de Trabalho\\saida.csv')
 
 
 if __name__ == '__main__':
-    url = 'C:\\Users\\luiz\\Desktop\\data\\'
+    url = 'C:\\Users\\luiz_\\OneDrive\\Área de Trabalho\\gitMiningDevelopers\\src\\data\\'
     devColetede = pd.read_csv(url + "full.csv")
     devProjWithUser = json.load(open(url + 'ProjWithUser.json', 'r'))
     devList = json.load(open(url + 'devs.json', 'r'))
-    dev750 = json.load(open('C:\\Users\\luiz\\Desktop\\Teste.json', 'r'))
+    dev750 = json.load(open('C:\\Users\\luiz_\\OneDrive\\Área de Trabalho\\dev750.json', 'r'))
+
 
     # devNotColetede(devColetede, devList)
     # organizesLanguageAndProjects(devColetede, devProjWithUser)
     # origin(devColetede)
-    colleteCommits(url, devColetede, dev750)
 
+    colleteCommits(url, devColetede, dev750)
+    # processCommit(dev750, url)
+    # processLanguagem(dev750, url)
+    # generateDevsByLanguage(dev750, url)

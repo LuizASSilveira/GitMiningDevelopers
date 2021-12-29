@@ -1,6 +1,3 @@
-import json
-
-
 def userCommitModification(commits):
     addicted = list()
     deletions = list()

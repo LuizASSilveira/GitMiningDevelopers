@@ -4,11 +4,10 @@ from pprint import pprint
 import arrow
 from src.gitHubApiRequest import performRequest
 
-path = 'C:\\Users\\luiz\\Desktop\\userCommit.json'
+path = 'C:\\Users\\luiz_\\OneDrive\\Área de Trabalho\\gitMiningDevelopers\\src\\data\\userCommit.json'
 file = open(path, 'r')
 commits = json.load(file)
 file.close()
-
 devCommiter = {}
 
 
